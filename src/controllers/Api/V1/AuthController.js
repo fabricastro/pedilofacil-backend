@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../../../models/user");
+const user = require("../../../models/user");
 const { validationResult } = require("express-validator");
 
 const authController = {
@@ -17,8 +17,8 @@ const authController = {
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
       // Create the user in the database
-      await User.create({ username, email, password: hashedPassword });
-      res.status(201).json({ message: "User registered successfully" });
+      await user.create({ username, email, password: hashedPassword });
+      res.status(201).json({ message: "user registered successfully" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Registration failed: " + error.message });
@@ -36,7 +36,7 @@ const authController = {
 
       const { email, password } = req.body;
       // Find the user by email
-      const [rows] = await User.findByEmail(email);
+      const [rows] = await user.findByEmail(email);
 
       if (rows.length === 0) {
         return res.status(401).json({ message: "Invalid credentials" });

@@ -1,6 +1,6 @@
 const db = require("../config/database");
 
-const User = {
+const user = {
   create: (user) => {
     return db
       .promise()
@@ -15,4 +15,4 @@ const User = {
   },
 };
 
-module.exports = User;
+module.exports = user;
