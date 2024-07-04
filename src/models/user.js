@@ -1,28 +1,17 @@
 const db = require("../config/database");
 
 const User = {
-  create: async (userData) => {
-    const { username, email, password } = userData;
-    try {
-      const [result] = await db.execute(
+  create: (user) => {
+    return db
+      .promise()
+      .execute(
         "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-        [username, email, password]
+        [user.username, user.email, user.password]
       );
-      return result;
-    } catch (error) {
-      console.error('Database error:', error);
-      throw error;
-    }
   },
 
-  findByEmail: async (email) => {
-    try {
-      const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [email]);
-      return rows;
-    } catch (error) {
-      console.error('Database error:', error);
-      throw error;
-    }
+  findByEmail: (email) => {
+    return db.promise().query("SELECT * FROM users WHERE email = ?", [email]);
   },
 };
 
