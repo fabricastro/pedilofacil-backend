@@ -1,6 +1,6 @@
 const db = require("../config/database");
 
-const user = {
+const User = {
   create: async (userData) => {
     const { username, email, password } = userData;
     try {
@@ -18,7 +18,7 @@ const user = {
   findByEmail: async (email) => {
     try {
       const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [email]);
-      return rows[0];
+      return rows;
     } catch (error) {
       console.error('Database error:', error);
       throw error;
@@ -26,4 +26,4 @@ const user = {
   },
 };
 
-module.exports = user;
+module.exports = User;
