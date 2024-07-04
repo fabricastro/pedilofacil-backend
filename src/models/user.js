@@ -1,17 +1,20 @@
 const db = require("../config/database");
 
 const User = {
-  create: (user) => {
-    return db
-      .promise()
-      .execute(
-        "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-        [user.username, user.email, user.password]
-      );
-  },
-
-  findByEmail: (email) => {
-    return db.promise().query("SELECT * FROM users WHERE email = ?", [email]);
+  findByEmail: async (email) => {
+    try {
+      const connection = await db.getConnection();
+      const [rows] = await connection.execute("SELECT * FROM users WHERE email = ?", [email]);
+      
+      if (rows.length === 0) {
+        return null; // No se encontró ningún usuario
+      }
+      
+      return rows[0]; // Devolver el primer usuario encontrado
+    } catch (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
   },
 };
 

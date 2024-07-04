@@ -1,12 +1,12 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../../../models/user");
+const User = require("../../../models/User");
 const { validationResult } = require("express-validator");
+const db = require("../../../config/database");
 
 const authController = {
   register: async (req, res) => {
     try {
-      // Validate the user input
       const errors = validationResult(req);
 
       if (!errors.isEmpty()) {
@@ -14,10 +14,12 @@ const authController = {
       }
 
       const { username, email, password } = req.body;
-      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
-      // Create the user in the database
-      await User.create({ username, email, password: hashedPassword });
+      
+      // Ensure db connection is established
+      const connection = await db.getConnection();
+      const result = await User.create(connection, { username, email, password: hashedPassword });
+      
       res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
       console.error(error);
@@ -27,7 +29,6 @@ const authController = {
 
   login: async (req, res) => {
     try {
-      // Validate the user input
       const errors = validationResult(req);
 
       if (!errors.isEmpty()) {
@@ -35,14 +36,12 @@ const authController = {
       }
 
       const { email, password } = req.body;
-      // Find the user by email
-      const [rows] = await User.findByEmail(email);
+      const user = await User.findByEmail(email);
 
-      if (rows.length === 0) {
+      if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const user = rows[0];
       // Compare the provided password with the hashed password
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -54,17 +53,16 @@ const authController = {
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.DB_SECRET,
-        {
-          expiresIn: "1h",
-        }
+        { expiresIn: "1h" }
       );
 
       res.status(200).json({ token: token });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: "Login failed" });
+      res.status(500).json({ message: "Login failed: " + error.message });
     }
   },
+
 
   validateToken: (req, res) => {
     const token = req.headers.authorization;
@@ -74,7 +72,7 @@ const authController = {
     try {
       const decoded = jwt.verify(token, process.env.DB_SECRET);
       req.userId = decoded.userId;
-      return res.status(200).json({ message: "Token validate" })
+      return res.status(200).json({ message: "Token validated" });
     } catch (error) {
       console.error(error);
       return res.status(401).json({ message: "Invalid token" });
